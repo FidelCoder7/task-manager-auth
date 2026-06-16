@@ -5,3 +5,4 @@ __pycache__/
 .env.example
 *.db
 .pytest_cache/
+.coverage
