@@ -46,6 +46,9 @@ class Status(str, enum.Enum):
     in_progress = "in_progress"
     done = "done"
 
+class RoleEnum(str, enum.Enum):
+    user = "user"
+    admin = "admin"
 
 # ── User (from auth-system) ────────────────────────────────────────
 
@@ -60,6 +63,7 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     oauth_provider = Column(String, nullable=True)
     oauth_id = Column(String, nullable=True)
+    role = Column(Enum(RoleEnum), default=RoleEnum.user, nullable=False) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # One user → many tasks. Deleting a user deletes their tasks.
