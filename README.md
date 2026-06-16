@@ -1,25 +1,26 @@
-# 🔐 Task Manager API — with Authentication & Ownership
+#  Task Manager API — with Authentication, Ownership & RBAC
 
 ![CI](https://github.com/FidelCoder7/task-manager-auth/actions/workflows/ci.yml/badge.svg)
 
 A REST API where every task belongs to an authenticated user. Combines JWT-based
-authentication (register/login/refresh/logout, bcrypt password hashing) with a
-task management system, enforcing strict per-user data isolation.
+authentication, per-user data ownership, and role-based access control (RBAC)
+for admin oversight — all backed by a fully tested, paginated task management system.
+
 
 This project integrates two earlier portfolio projects — an [Auth System](https://github.com/FidelCoder7/Auth-system)
-and a [Task Manager REST API](https://github.com/FidelCoder7/task-api) — into a
-single production-style backend.
+and a [Task Manager REST API](https://github.com/FidelCoder7/task-api) — then extends them with admin capabilities and pagination.
 
 ## Features
 
 - User registration & login with JWT access/refresh tokens
-- bcrypt password hashing
-- Token blacklist (logout)
+- bcrypt password hashing, token blacklist (logout)
 - Full task CRUD: create, read, update, delete, filter, search, paginate
-- **Per-user data ownership** — users can only access their own tasks
+- **Per-user data ownership** — users can only access their own tasks 
 - Ownership violations return `404` (not `403`), so other users' data isn't leaked
+- **Role-Based Access Control (RBAC)** — admin role can view all users and all tasks (403 on violation)
+- **Pagination metadata** — task lists return `total`, `page`, `page_size`, `items`
 - SQLite + SQLAlchemy ORM
-- 22 pytest tests covering auth, CRUD, and ownership isolation
+- 37 pytest tests covering auth, CRUD, and ownership isolation, 97% coverage
 - GitHub Actions CI.
 
 ## Tech Stack
@@ -52,6 +53,18 @@ Visit `http://localhost:8000/docs` for interactive API docs.
 | GET | `/tasks/{id}` | Yes | Get one task (yours only) |
 | PUT | `/tasks/{id}` | Yes | Update a task (yours only) |
 | DELETE | `/tasks/{id}` | Yes | Delete a task (yours only) |
+
+## Authorization Model
+
+Two distinct patterns, by design:
+
+- **Ownership** (`/tasks/{id}`): violations return `404` — hides whether the
+  resource exists, since any authenticated user could guess IDs.
+- **Role gating** (`/admin/*`): violations return `403` — there's nothing to
+  hide about route existence, only access is restricted.
+
+Promoting a user to admin currently requires direct database access
+(no API endpoint) — see Future Improvements.
 
 ## Ownership Model
 
