@@ -12,7 +12,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models import Priority, Status, Task
+from app.models import Priority, Status, Task, User
 from app.schemas import TaskCreate, TaskUpdate
 
 
@@ -128,3 +128,30 @@ def get_task_count(db: Session, user_id: int) -> dict:
         "in_progress": base.filter(Task.status == Status.in_progress).count(),
         "done": base.filter(Task.status == Status.done).count(),
     }
+
+
+def get_all_tasks_paginated(
+    db: Session,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[int, list[Task]]:
+    """
+    Admin only — fetch a page of ALL tasks across ALL users.
+    No user_id filter, unlike get_tasks_paginated.
+    """
+    query = db.query(Task)
+    total = query.count()
+
+    items = (
+        query.order_by(Task.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return total, items
+
+
+def get_all_users(db: Session) -> list[User]:
+    """Admin only — fetch every user account."""
+    return db.query(User).all()
