@@ -143,3 +143,66 @@ def test_pagination_metadata_accuracy(client, auth_headers):
     data2 = response_page2.json()
     assert len(data2["items"]) == 1  # remaining 1 task
     
+
+
+# ── RBAC: Admin access ──────────────────────────────────────────────
+
+def test_regular_user_cannot_access_admin_tasks(client, auth_headers):
+    """A regular user hitting /admin/tasks gets 403, not 404."""
+    response = client.get("/admin/tasks", headers=auth_headers)
+    assert response.status_code == 403
+
+
+def test_regular_user_cannot_access_admin_users(client, auth_headers):
+    """A regular user hitting /admin/users gets 403."""
+    response = client.get("/admin/users", headers=auth_headers)
+    assert response.status_code == 403
+
+
+def test_admin_can_access_admin_tasks(client, admin_headers):
+    """An admin can successfully hit /admin/tasks."""
+    response = client.get("/admin/tasks", headers=admin_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "total" in data
+    assert "items" in data
+
+
+def test_admin_can_access_admin_users(client, admin_headers):
+    """An admin can successfully hit /admin/users."""
+    response = client.get("/admin/users", headers=admin_headers)
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+def test_admin_sees_all_users_tasks(client, auth_headers, admin_headers, alice_task):
+    """Admin's /admin/tasks includes Alice's task, even though
+    the admin didn't create it."""
+    response = client.get("/admin/tasks", headers=admin_headers)
+    data = response.json()
+    task_ids = [t["id"] for t in data["items"]]
+    assert alice_task["id"] in task_ids
+
+
+def test_admin_user_list_includes_regular_users(client, auth_headers, admin_headers):
+    """Admin's /admin/users includes Alice, not just the admin account."""
+    response = client.get("/admin/users", headers=admin_headers)
+    emails = [u["email"] for u in response.json()]
+    assert "alice@example.com" in emails
+    assert "admin@example.com" in emails
+
+
+def test_admin_routes_require_auth(client):
+    """No token at all on /admin/tasks → 401, not 403."""
+    response = client.get("/admin/tasks")
+    assert response.status_code == 401
+
+
+def test_invalid_token_on_admin_route_returns_401(client):
+    """Invalid token → 401 (auth failure), checked before role (403)."""
+    response = client.get(
+        "/admin/tasks",
+        headers={"Authorization": "Bearer not.a.real.token"},
+    )
+    assert response.status_code == 401
+    
