@@ -45,6 +45,20 @@ def client():
     return TestClient(app)
 
 
+@pytest.fixture
+def db_session():
+    """
+    Direct access to a test DB session — used by fixtures that need
+    to manipulate data the API has no endpoint for (e.g. promoting
+    a user to admin).
+    """
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 # ── Single-user fixtures ───────────────────────────────────────────
 
 @pytest.fixture
@@ -97,3 +111,29 @@ def alice_task(client, auth_headers):
         "priority": "high",
     }, headers=auth_headers)
     return response.json()
+
+
+
+# ── Admin fixtures (for RBAC tests) ─────────────────────────────────
+
+@pytest.fixture
+def admin_headers(client, db_session):
+    """Registers a user, promotes them to admin directly in the DB,
+    logs in, returns their Authorization header."""
+    from app.models import RoleEnum, User
+
+    client.post("/auth/register", json={
+        "email": "admin@example.com",
+        "username": "admin",
+        "password": "Pass123!",
+    })
+
+    user = db_session.query(User).filter(User.email == "admin@example.com").first()
+    user.role = RoleEnum.admin
+    db_session.commit()
+
+    login = client.post("/auth/login", json={
+        "email": "admin@example.com",
+        "password": "Pass123!",
+    })
+    return {"Authorization": f"Bearer {login.json()['access_token']}"}

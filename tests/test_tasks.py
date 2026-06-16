@@ -40,8 +40,9 @@ def test_list_tasks_returns_only_own(client, auth_headers, alice_task):
     response = client.get("/tasks/", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["id"] == alice_task["id"]
+    assert data["total"] == 1
+    assert len(data["items"]) == 1
+    assert data["items"][0]["id"] == alice_task["id"]
 
 
 def test_get_task_by_id(client, auth_headers, alice_task):
@@ -86,7 +87,9 @@ def test_user_cannot_see_others_task_in_list(client, second_user_headers, alice_
     """Bob's task list must not include Alice's task."""
     response = client.get("/tasks/", headers=second_user_headers)
     assert response.status_code == 200
-    assert response.json() == []
+    data = response.json()
+    assert data["total"] == 0
+    assert data["items"] == []
 
 
 def test_user_cannot_get_others_task_by_id(client, second_user_headers, alice_task):
@@ -122,3 +125,21 @@ def test_task_summary_isolated_per_user(client, auth_headers, second_user_header
     response = client.get("/tasks/summary", headers=second_user_headers)
     data = response.json()
     assert data["total"] == 0
+
+
+def test_pagination_metadata_accuracy(client, auth_headers):
+    """Creates 3 tasks, requests page_size=2, verifies pagination math."""
+    for i in range(3):
+        client.post("/tasks/", json={"title": f"Task {i}"}, headers=auth_headers)
+
+    response = client.get("/tasks/?page=1&page_size=2", headers=auth_headers)
+    data = response.json()
+    assert data["total"] == 3
+    assert data["page"] == 1
+    assert data["page_size"] == 2
+    assert len(data["items"]) == 2
+
+    response_page2 = client.get("/tasks/?page=2&page_size=2", headers=auth_headers)
+    data2 = response_page2.json()
+    assert len(data2["items"]) == 1  # remaining 1 task
+    
