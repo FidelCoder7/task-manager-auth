@@ -51,18 +51,21 @@ def get_task(db: Session, task_id: int, user_id: int) -> Optional[Task]:
         .first()
     )
 
-
-def get_tasks(
+def get_tasks_paginated(
     db: Session,
     user_id: int,
+    page: int = 1,
+    page_size: int = 20,
     status: Optional[Status] = None,
     priority: Optional[Priority] = None,
     search: Optional[str] = None,
-    skip: int = 0,
-    limit: int = 100,
-) -> list[Task]:
+) -> tuple[int, list[Task]]:
     """
-    Fetch tasks belonging to user_id, with optional filtering and pagination.
+    Fetch a page of tasks belonging to user_id, with optional filtering.
+
+    Returns:
+        (total, items) — total is the full count matching filters
+        (before pagination), items is just this page's rows.
     """
     query = db.query(Task).filter(Task.user_id == user_id)
 
@@ -75,8 +78,16 @@ def get_tasks(
     if search:
         query = query.filter(Task.title.ilike(f"%{search}%"))
 
-    return query.order_by(Task.created_at.desc()).offset(skip).limit(limit).all()
+    total = query.count()
 
+    items = (
+        query.order_by(Task.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return total, items
 
 def update_task(db: Session, task: Task, updates: TaskUpdate) -> Task:
     """

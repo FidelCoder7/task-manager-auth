@@ -3,9 +3,9 @@ Pydantic schemas — define what the API accepts and returns.
 
 Organized in two groups:
   Auth schemas  — registration, login, tokens
-  Task schemas  — create/update/response (now without exposing user_id
-                   directly to clients on input; it's set server-side
-                   from the authenticated user)
+  Task schemas  — create/update/response 
+                   
+                   
 """
 
 from datetime import datetime
@@ -89,3 +89,12 @@ class TaskResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     user_id: int
+
+
+class PaginatedTaskResponse(BaseModel):
+    """Paginated wrapper for task list responses."""
+    total: int
+    page: int
+    page_size: int
+    items: list[TaskResponse]
+    

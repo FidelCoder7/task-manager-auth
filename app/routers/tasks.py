@@ -32,7 +32,7 @@ from app import crud
 from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models import Priority, Status, User
-from app.schemas import TaskCreate, TaskResponse, TaskUpdate
+from app.schemas import PaginatedTaskResponse, TaskCreate, TaskResponse, TaskUpdate
 
 router = APIRouter(
     prefix="/tasks",
@@ -60,35 +60,35 @@ def _get_task_or_404(task_id: int, user_id: int, db: Session) -> crud.Task:
 
 # ── GET /tasks ────────────────────────────────────────────────────
 
-@router.get("/", response_model=list[TaskResponse])
+@router.get("/", response_model=PaginatedTaskResponse)
 def list_tasks(
     task_status: Optional[Status] = Query(None, alias="status"),
     priority: Optional[Priority] = Query(None),
     search: Optional[str] = Query(None, min_length=1),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Retrieve the current user's tasks.
+    Retrieve the current user's tasks, paginated.
 
     Optional query parameters:
     - **status**: filter by pending | in_progress | done
     - **priority**: filter by low | medium | high
     - **search**: search by title keyword
-    - **skip** / **limit**: pagination
+    - **page** / **page_size**: pagination (page starts at 1)
     """
-    return crud.get_tasks(
+    total, items = crud.get_tasks_paginated(
         db,
         user_id=current_user.id,
+        page=page,
+        page_size=page_size,
         status=task_status,
         priority=priority,
         search=search,
-        skip=skip,
-        limit=limit,
     )
-
+    return PaginatedTaskResponse(total=total, page=page, page_size=page_size, items=items)
 
 # ── GET /tasks/summary ────────────────────────────────────────────
 
