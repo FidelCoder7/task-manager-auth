@@ -9,6 +9,7 @@ Responsibilities:
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app.routers import admin, auth_routes, tasks
@@ -27,6 +28,22 @@ app = FastAPI(
     ),
     version="1.1.0",
 )
+
+
+# Allow the React dev server to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Vite default port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_routes.router)
+app.include_router(tasks.router)
+app.include_router(admin.router)
+
+
 
 # Register routers
 app.include_router(auth_routes.router)
