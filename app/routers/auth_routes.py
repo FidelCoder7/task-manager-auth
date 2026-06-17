@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.jwt_handler import create_access_token, create_refresh_token, decode_token
 from app.auth.password import hash_password, verify_password
+from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models import TokenBlacklist, User
 from app.schemas import (
@@ -106,3 +107,11 @@ def logout(body: TokenRefreshRequest, db: Session = Depends(get_db)):
     db.add(blacklist_entry)
     db.commit()
     return MessageResponse(message="Successfully logged out")
+
+
+# ── CURRENT USER ──────────────────────────────────────────────
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    """Return the currently authenticated user's profile, including role."""
+    return current_user

@@ -42,6 +42,7 @@ class UserResponse(BaseModel):
     is_active: bool
     is_verified: bool
     oauth_provider: Optional[str]
+    role: str
     created_at: datetime
 
 

@@ -72,3 +72,16 @@ def test_logout_then_refresh_fails(client, auth_tokens):
         "refresh_token": auth_tokens["refresh_token"],
     })
     assert response.status_code == 401
+
+
+def test_get_me_returns_user_profile(client, auth_headers):
+    response = client.get("/auth/me", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "alice@example.com"
+    assert data["role"] == "user"
+
+
+def test_get_me_requires_auth(client):
+    response = client.get("/auth/me")
+    assert response.status_code == 401
