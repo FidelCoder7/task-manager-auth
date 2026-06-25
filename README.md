@@ -10,6 +10,10 @@ for admin oversight — all backed by a fully tested, paginated task management 
 This project integrates two earlier portfolio projects — an [Auth System](https://github.com/FidelCoder7/Auth-system)
 and a [Task Manager REST API](https://github.com/FidelCoder7/task-api) — then extends them with admin capabilities and pagination.
 
+## Frontend 
+
+Frontend[task-manager-frontend](https://github.com/FidelCoder7/task-manager-frontend)
+
 ## Features
 
 - User registration & login with JWT access/refresh tokens
