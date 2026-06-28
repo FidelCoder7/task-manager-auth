@@ -33,7 +33,10 @@ app = FastAPI(
 # Allow the React dev server to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite default port
+    allow_origins=[
+        "http://localhost:5173",                                     # local dev
+        "https://task-manager-frontend-iota-jet.vercel.app"],        # production
+    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
