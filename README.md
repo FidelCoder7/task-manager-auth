@@ -101,3 +101,12 @@ tests/
 ├── test_jwt.py
 └── test_tasks.py
 ```
+## Licence 
+
+MIT
+
+## Live API:
+ https://task-manager-auth-production.up.railway.app/docs  
+
+ ## Frontend:
+ https://task-manager-frontend-iota-jet.vercel.app
