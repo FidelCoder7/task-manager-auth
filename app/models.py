@@ -63,7 +63,7 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     oauth_provider = Column(String, nullable=True)
     oauth_id = Column(String, nullable=True)
-    role = Column(Enum(RoleEnum), default=RoleEnum.user, nullable=False) 
+    role = Column(Enum(RoleEnum, native_enum=False), default=RoleEnum.user, nullable=False) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # One user → many tasks. Deleting a user deletes their tasks.
@@ -82,8 +82,8 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False, index=True)
     description = Column(Text, nullable=True)
-    status = Column(Enum(Status), default=Status.pending, nullable=False)
-    priority = Column(Enum(Priority), default=Priority.medium, nullable=False)
+    status = Column(Enum(Status, native_enum=False), default=Status.pending, nullable=False)
+    priority = Column(Enum(Priority, native_enum=False), default=Priority.medium, nullable=False)
     created_at = Column(DateTime, default=_utcnow, nullable=False)
     updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow, nullable=False)
 

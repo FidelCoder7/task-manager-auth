@@ -1,21 +1,23 @@
 """
 Database connection and session management.
 
-This is the SINGLE shared database setup for the whole app.
-Both the User model (auth) and Task model register against
-the same Base, so Base.metadata.create_all() creates both
-tables together.
+DATABASE_URL is loaded from environment — supports both
+SQLite (CI/testing) and PostgreSQL (local dev + production).
 """
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "sqlite:///./app.db"
+from app.config import settings
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
+# SQLite needs check_same_thread=False; PostgreSQL does not
+connect_args = (
+    {"check_same_thread": False}
+    if settings.DATABASE_URL.startswith("sqlite")
+    else {}
 )
+
+engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 
 SessionLocal = sessionmaker(
     autocommit=False,
